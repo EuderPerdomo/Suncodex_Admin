@@ -10,21 +10,22 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            # 1. Instalar Node.js si no existe
-            if ! command -v npm &> /dev/null; then
+            # 1. Instalar Node.js
+            if ! command -v npm &>/dev/null; then
               curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
               sudo apt-get install -y nodejs
             fi
-
-            # 2. Clonar el repositorio (si no existe)
-            if [ ! -d "/var/www/html/Suncodex_Admin/.git" ]; then
-             git clone https://github.com/EuderPerdomo/Suncodex_Admin.git /var/www/html/Suncodex_Admin
-            fi
-
-            # 3. Despliegue
+            
+            # 2. Preparar directorio y clonar repo
+            mkdir -p /var/www/html/Suncodex_Admin
             cd /var/www/html/Suncodex_Admin
-            git fetch
-            git checkout ${{ secrets.MAIN_BRANCH }}  # ej: main o master
+            
+            if ! git rev-parse --is-inside-work-tree &>/dev/null; then
+              git clone https://github.com/TU_USUARIO/TU_REPO.git .
+            fi
+            
+            # 3. Despliegue
+            git checkout ${{ secrets.MAIN_BRANCH }}
             git pull
             npm install
             npm run build
