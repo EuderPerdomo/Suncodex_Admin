@@ -18,7 +18,7 @@ jobs:
 
             # 2. Clonar el repositorio (si no existe)
             if [ ! -d "/var/www/html/Suncodex_Admin/.git" ]; then
-              git clone https://github.com/tu-usuario/tu-repo.git /var/www/html/Suncodex_Admin
+             git clone https://github.com/EuderPerdomo/Suncodex_Admin.git /var/www/html/Suncodex_Admin
             fi
 
             # 3. Despliegue
