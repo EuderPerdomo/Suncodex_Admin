@@ -1,15 +1,8 @@
-on:
-  push:
-    branches:
-      - master
-  workflow_dispatch:
 jobs:
-  run_pull:
-    name: run pull
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: executing remote ssh commands using ssh key
+      - name: Deploy Angular via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -17,12 +10,26 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            export NVM_DIR=~/.nvm
-            source ~/.nvm/nvm.sh 
-            cd ${{ secrets.WORK_DIR }} 
-            git fetch 
-            git checkout ${{ secrets.MAIN_BRANCH }} 
-            git pull 
-            npm install 
-            npm run build
-            exit
+            # 1. Instalar Node.js solo si no existe
+            if ! command -v node &>/dev/null; then
+              curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+              sudo apt-get install -y nodejs
+            fi
+
+            # 2. Instalar Angular CLI solo si no existe o está en versión incorrecta
+            if ! command -v ng &>/dev/null || [[ $(ng version | grep 'Angular CLI' | awk '{print $3}') != "19.2.9" ]]; then
+              sudo npm install -g @angular/cli@19.2.9
+            fi
+
+            # 3. Clonar/Actualizar repo
+            mkdir -p /var/www/html/Suncodex_Admin
+            cd /var/www/html/Suncodex_Admin
+            if ! git rev-parse --is-inside-work-tree &>/dev/null; then
+              git clone https://github.com/TU_USUARIO/TU_REPO.git .
+            fi
+            
+            # 4. Despliegue
+            git checkout ${{ secrets.MAIN_BRANCH }}
+            git pull
+            npm install
+            ng build --configuration production
