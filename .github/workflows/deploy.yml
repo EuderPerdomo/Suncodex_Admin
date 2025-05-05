@@ -1,14 +1,42 @@
+name: Build and Deploy Angular
+
 on:
   push:
-    branches:
-      - master
-  workflow_dispatch:
+    branches: [ master ]  # Cambia según tu rama
+
 jobs:
-  run_pull:
-    name: run pull
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Deploy Angular via SSH
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'  # Usa tu versión
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build Angular
+        run: |
+          npm install -g @angular/cli@19.2.9  # Ajusta la versión
+          ng build --configuration production
+
+      - name: Deploy to Server via SCP
+        uses: appleboy/scp-action@v1.0.0
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SSH_PORT }}
+          source: "dist/proyecto/*"  # Ajusta según tu angular.json > outputPath
+          target: "/var/www/html/Suncodex_Admin"
+          rm: true  # Borra archivos antiguos en el servidor
+
+      - name: Restart Nginx (Opcional)
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -16,21 +44,4 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            if ! command -v node &>/dev/null; then
-              curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-              sudo apt-get install -y nodejs
-            fi
-
-            if ! command -v ng &>/dev/null || [[ $(ng version | grep 'Angular CLI' | awk '{print $3}') != "19.2.9" ]]; then
-              sudo npm install -g @angular/cli@19.2.9
-            fi
-
-            export NVM_DIR=~/.nvm
-            source ~/.nvm/nvm.sh 
-            cd ${{ secrets.WORK_DIR }} 
-            git fetch 
-            git checkout ${{ secrets.MAIN_BRANCH }} 
-            git pull 
-            npm install 
-            ng build --configuration production
-            exit
+            sudo systemctl restart nginx
