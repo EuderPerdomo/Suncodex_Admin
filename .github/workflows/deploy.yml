@@ -1,4 +1,9 @@
-jobs:
+on:
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+  jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
@@ -18,7 +23,7 @@ jobs:
             if ! command -v ng &>/dev/null || [[ $(ng version | grep 'Angular CLI' | awk '{print $3}') != "19.2.9" ]]; then
               sudo npm install -g @angular/cli@19.2.9
             fi
-            
+
             export NVM_DIR=~/.nvm
             source ~/.nvm/nvm.sh 
             cd ${{ secrets.WORK_DIR }} 
