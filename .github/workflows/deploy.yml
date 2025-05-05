@@ -42,10 +42,10 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
-          source: "dist/admin/browser/*"
+          source: "dist/admin/browser/**"
           target: "/var/www/html/admin"
           rm: true  # Elimina archivos antiguos
-          strip_components: 2  # Omite carpetas dist/admin/browser
+          strip_components: 3  # Omite carpetas dist/admin/browser
 
       # --- PASO 6 (Opcional): Reiniciar Nginx ---
       - name: Restart web server
