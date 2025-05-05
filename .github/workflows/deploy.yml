@@ -1,15 +1,8 @@
-on:
-  push:
-    branches:
-      - master
-  workflow_dispatch:
 jobs:
-  run_pull:
-    name: run pull
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: executing remote ssh commands using ssh key
+      - name: Deploy via SSH
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -17,10 +10,21 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SSH_PORT }}
           script: |
-            cd ${{ secrets.WORK_DIR }} 
-            git fetch 
-            git checkout ${{ secrets.MAIN_BRANCH }} 
-            git pull 
-            npm install 
-            npm run build 
-            exit
+            # 1. Instalar Node.js si no existe
+            if ! command -v npm &> /dev/null; then
+              curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+              sudo apt-get install -y nodejs
+            fi
+
+            # 2. Clonar el repositorio (si no existe)
+            if [ ! -d "/var/www/html/Suncodex_Admin/.git" ]; then
+              git clone https://github.com/tu-usuario/tu-repo.git /var/www/html/Suncodex_Admin
+            fi
+
+            # 3. Despliegue
+            cd /var/www/html/Suncodex_Admin
+            git fetch
+            git checkout ${{ secrets.MAIN_BRANCH }}  # ej: main o master
+            git pull
+            npm install
+            npm run build
