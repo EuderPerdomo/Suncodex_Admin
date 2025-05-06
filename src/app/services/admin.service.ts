@@ -254,13 +254,14 @@ export class AdminService {
       }
 
       if (!decodedToken) {
+
         localStorage.removeItem('token');
   
         return of(false);
       }
 
       // Token exists and is valid, check roles
-      if (allowedRoles.includes(decodedToken['role'])) { //Antes era rol ahora es role
+      if (allowedRoles.includes(decodedToken['rol'])) { //Antes era rol ahora es role
 
         return of(true);
       } else {
